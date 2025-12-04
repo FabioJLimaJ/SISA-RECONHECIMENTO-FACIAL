@@ -1,0 +1,112 @@
+{%extends 'base.html' %}
+
+{% block titulo %} Estudantes {% endblock %}
+
+
+{% block conteudo%}
+
+<main class="max-w-7xl mx-auto py-6 px-4 mt-16 sm:px-6 lg:px-8">
+    <div class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+
+            <div class="bg-[#007BFF] px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-white flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-users w-6 h-6 mr-3">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        Lista de Estudantes
+                    </h1>
+                    <form action="{% url 'exportCsv' %}">
+                        <input type="hidden" name="x" value="estudantes">
+                        <button
+                            class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-plus w-4 h-4" type="submit">
+                                <path d="M5 12h14"></path>
+                                <path d="M12 5v14"></path>
+                            </svg>
+                            <span>Exportar csv</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+
+             <div class="p-4">
+                    <!-- Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{total}}</div>
+                            <div class="text-sm text-blue-800">Total de Alunos</div>
+                        </div>
+                        <div class="bg-blue-50 border border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{dsm}}</div>
+                            <div class="text-sm text-blue-800">DSM</div>
+                        </div>
+                        <div class="bg-blue-50 border border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ads}}</div>
+                            <div class="text-sm text-blue-800">ADS</div>
+                        </div>
+                        <div class="bg-blue-50 border border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{comex}}</div>
+                            <div class="text-sm text-blue-800">COMEX</div>
+                            
+                        </div>
+                        <div class="bg-blue-50 border border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{pq}}</div>
+                            <div class="text-sm text-blue-800">PQ</div>
+                            
+                        </div>
+                        <div class="bg-blue-50 border border border-blue-200 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ge}}</div>
+                            <div class="text-sm text-blue-800">GE</div>
+                            
+                        </div>
+                    </div>
+
+                <div class="grid gap-4">
+                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..." alt="" />
+                            </div>
+                            <!-- Conteúdo adicional aqui -->
+
+                            <table class="min-w-full border border-gray-300 rounded-lg">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left font-semibold">Nome</th>
+                                        <th class="px-4 py-2 text-left font-semibold">Faculdade</th>
+                                        <th class="px-4 py-2 text-left font-semibold">Curso</th>
+                                        <th class="px-4 py-2 text-left font-semibold">Turno</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for item in estudantes %}
+                                    <tr class="border-t">
+                                        <td class="px-4 py-2">{{ item.nome }}</td>
+                                        <td class="px-4 py-2">{{ item.faculdade }}</td>
+                                        <td class="px-4 py-2">{{ item.curso }}</td>
+                                        <td class="px-4 py-2">{{ item.turno }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+{% endblock %}

@@ -1,0 +1,279 @@
+{%extends 'base.html' %}
+
+{% block titulo %} Cadastrar Aluno {% endblock %}
+
+
+{% block conteudo%}
+
+
+<style type="text/tailwindcss">
+  @layer utilities {
+    .glow-green {
+      box-shadow:0 0 20px 10px rgba(20, 83, 45, 0.5);
+    }
+    .glow-red {
+      box-shadow:0 0 20px 10px rgba(127, 29, 29, 0.5);
+    }
+    .fade-out-tailwind {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  }
+</style>
+
+<main class="max-w-7xl mx-auto py-6 px-4 mt-16 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+
+      <!-- Cabeçalho -->
+      <div class="bg-[#007BFF] px-6 py-4">
+        <h1 class="text-2xl font-bold text-white flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-user-plus w-6 h-6 mr-3">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" x2="19" y1="8" y2="14"></line>
+            <line x1="22" x2="16" y1="11" y2="11"></line>
+          </svg>
+          Cadastro de Estudante
+        </h1>
+      </div>
+
+
+
+      <div class="p-8">
+
+        <div class="text-center mb-8">
+          <div id="highlight" class="bg-gray-900 rounded-lg overflow-hidden aspect-video transform scale-x-[-1]">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <canvas id="canvas" hidden></canvas>
+            <div id="result">Aponte a câmera para o QR Code...</div>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">
+            Sistema de Leitura com QR Code
+          </h2>
+          <p class="resultado text-lg font-medium text-gray-600">
+            Aproxime seu cartão do leitor de QR Code
+          </p>
+        </div>
+
+        <!-- Campo de UID -->
+        <div class="space-y-6">
+          <div>
+            <!-- Instruções -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Instruções</h3>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span class="text-xs font-bold text-purple-600">1</span>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-900">Leitura</h4>
+                    <p class="text-sm text-gray-600">Aproxime o QR Code presente no verso do seu cartão da Fatec no
+                      leitor</p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span class="text-xs font-bold text-purple-600">2</span>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-900">Cadastro</h4>
+                    <p class="text-sm text-gray-600">Se não estiver cadastrado, o sistema irá cadastrar seus dados
+                      através do cartão</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+</main>
+
+<script>
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const resultado = document.getElementById("result");
+  const resp = document.querySelector(".resultado");
+  const glow = document.getElementById("highlight");
+  let scanning = true;
+  let stream = null;
+
+
+
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(s => {
+      stream = s;
+      video.srcObject = stream;
+      video.play();
+      requestAnimationFrame(scanQRCode);
+    })
+    .catch(err => {
+      resultado.innerText = "Erro ao acessar a câmera: " + err;
+    });
+
+
+  function stopCamera() {
+    scanning = false;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    console.log("Câmera parada");
+  }
+  function startCameraAgain() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+
+    scanning = true;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(s => {
+        stream = s;
+        video.srcObject = stream;
+        video.play();
+        requestAnimationFrame(scanQRCode);
+
+        setTimeout(() => {
+          resp.innerText = "Câmera reativada. Aponte para o QR Code...";
+        }, 4000);
+        console.log("Câmera reiniciada");
+      })
+      .catch(err => {
+        resultado.innerText = "Erro ao reativar a câmera: " + err;
+      });
+  }
+
+
+  function scanQRCode() {
+    if (!scanning) return;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+
+      if (code) {
+        resp.textContent = 'analisando cartao'
+        stopCamera();
+
+
+        fetch('/cadastrar/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({ url: code.data })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.mensagem) {
+
+              if (data.mensagem === "Aluno cadastrado com sucesso!") {
+                glow.classList.add("glow-green");
+
+                resp.innerHTML = `<div
+    role="alert"
+    class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 dark:border-green-700 text-green-900 dark:text-green-100 p-2 rounded-lg flex items-center transition duration-300 ease-in-out hover:bg-green-200 dark:hover:bg-green-800 transform hover:scale-105"
+  >
+    <svg
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      fill="none"
+      class="h-5 w-5 flex-shrink-0 mr-2 text-green-600"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        stroke-width="2"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+    <p class="text-xs font-semibold">Sucesso - Aluno cadastrado</p>
+  </div>`;
+              }
+              else if (data.mensagem === "Aluno já cadastrado!") {
+                glow.classList.add("glow-red");
+
+                resp.innerHTML = `  <div
+    role="alert"
+    class="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100 p-2 rounded-lg flex items-center transition duration-300 ease-in-out hover:bg-yellow-200 dark:hover:bg-yellow-800 transform hover:scale-105"
+  >
+    <svg
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      fill="none"
+      class="h-5 w-5 flex-shrink-0 mr-2 text-yellow-600"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        stroke-width="2"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+    <p class="text-xs font-semibold">
+      Aviso - Aluno ja cadastrado.
+    </p>
+  </div>`;
+
+              }
+
+              setTimeout(() => {
+                glow.classList.remove("glow-green", "glow-red");
+                resp.innerText = "Aponte a câmera para o QR Code...";
+              }, 4000);
+
+              startCameraAgain();
+            }
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            resultado.innerText = "Erro ao enviar dados.";
+            startCameraAgain();
+          });
+
+        return;
+      } else {
+
+      }
+    }
+
+    requestAnimationFrame(scanQRCode);
+  }
+
+</script>
+
+
+
+
+{% endblock %}
